@@ -119,9 +119,10 @@ class Drupal8Plugin(p.SingletonPlugin):
                 rows = engine.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
                     'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
                     '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
+                    '     WHERE r.roles_target_id=%s '
                     ') AS t ON t.entity_id = u.uid '
                     'WHERE s.sid=%s',
-                    [str(hashed_sid)])
+                    [self.sysadmin_role, str(hashed_sid)])
  
                 for row in rows:
                     user = self.user(row)
