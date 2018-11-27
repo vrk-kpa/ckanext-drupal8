@@ -160,7 +160,7 @@ class Drupal8Plugin(p.SingletonPlugin):
                     'name': user_data.name,
                     'password': self.make_password(),
                     'sysadmin': bool(user_data.uid), }
-            user = p.toolkit.get_action('user_create')({'ignore_auth': True}, user)
+            user = p.toolkit.get_action('user_create')({'user': None, 'ignore_auth': True}, user)
         return user['name']
 
     def abort(self, status_code, detail, headers, comment):
