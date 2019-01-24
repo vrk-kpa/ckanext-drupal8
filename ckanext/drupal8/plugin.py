@@ -169,7 +169,7 @@ class Drupal8Plugin(p.SingletonPlugin):
         # been logged in yet.
         # self.identify()
         if (status_code == 401 and p.toolkit.c.user is not None):
-            h.redirect_to('drupal7_unauthorized')
+            h.redirect_to('drupal8_unauthorized')
         return (status_code, detail, headers, comment)
 
     def get_auth_functions(self):
