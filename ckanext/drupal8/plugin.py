@@ -66,7 +66,8 @@ class Drupal8Plugin(p.SingletonPlugin):
         domain = config.get('ckanext.drupal8.domain')
         self.sysadmin_role = config.get('ckanext.drupal8.sysadmin_role')
         self.connection = config.get('ckanext.drupal8.connection')
-        self.allow_edit = config.get('ckanext.drupal8.allow_edit', 'false') == 'true'
+        self.allow_edit = config.get(
+            'ckanext.drupal8.allow_edit', 'false') == 'true'
 
         if not (domain and self.sysadmin_role and self.connection):
             raise Exception('Drupal8 extension has not been configured')
@@ -112,18 +113,18 @@ class Drupal8Plugin(p.SingletonPlugin):
         for drupal_session_name in self.drupal_session_names:
             drupal_sid = cookies.get(drupal_session_name)
             if drupal_sid:
-                hashed_sid = base64.urlsafe_b64encode(hashlib.sha256(drupal_sid).digest()).replace("=", '')
-
+                hashed_sid = base64.urlsafe_b64encode(
+                    hashlib.sha256(drupal_sid).digest()).replace("=", '')
 
                 engine = sa.create_engine(self.connection)
                 rows = engine.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
-                    'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
-                    '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
-                    '     WHERE r.roles_target_id=%s '
-                    ') AS t ON t.entity_id = u.uid '
-                    'WHERE s.sid=%s',
-                    [self.sysadmin_role, str(hashed_sid)])
- 
+                                      'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
+                                      '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
+                                      '     WHERE r.roles_target_id=%s '
+                                      ') AS t ON t.entity_id = u.uid '
+                                      'WHERE s.sid=%s',
+                                      [self.sysadmin_role, str(hashed_sid)])
+
                 for row in rows:
                     user = self.user(row)
                     break
@@ -137,7 +138,8 @@ class Drupal8Plugin(p.SingletonPlugin):
 
     def user(self, user_data):
         try:
-            user = p.toolkit.get_action('user_show')({'keep_email': True}, {'id': user_data.name})
+            user = p.toolkit.get_action('user_show')(
+                {'keep_email': True}, {'id': user_data.name})
         except p.toolkit.ObjectNotFound:
             user = None
 
@@ -149,18 +151,20 @@ class Drupal8Plugin(p.SingletonPlugin):
                 email_hash = self._email_hash(user.get("email"))
 
             if (self._email_hash(user_data.mail) != email_hash
-                or bool(user_data.uid) != user['sysadmin']):
+                    or bool(user_data.uid) != user['sysadmin']):
                 user['email'] = user_data.mail
                 user['sysadmin'] = bool(user_data.uid)
                 user['id'] = user_data.name
                 user['fullname'] = user_data.name
-                user = p.toolkit.get_action('user_update')({'ignore_auth': True}, user)
+                user = p.toolkit.get_action('user_update')(
+                    {'ignore_auth': True}, user)
         else:
             user = {'email': user_data.mail,
                     'name': user_data.name,
                     'password': self.make_password(),
                     'sysadmin': bool(user_data.uid), }
-            user = p.toolkit.get_action('user_create')({'user': None, 'ignore_auth': True}, user)
+            user = p.toolkit.get_action('user_create')(
+                {'user': None, 'ignore_auth': True}, user)
         return user['name']
 
     def abort(self, status_code, detail, headers, comment):
