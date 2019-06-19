@@ -122,7 +122,7 @@ class Drupal8Plugin(p.SingletonPlugin):
                                       '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
                                       '     WHERE r.roles_target_id=%s '
                                       ') AS t ON t.entity_id = u.uid '
-                                      'WHERE s.sid=%s',
+                                      'WHERE s.sid=%s AND u.name != \'\'',
                                       [self.sysadmin_role, str(hashed_sid)])
 
                 for row in rows:
