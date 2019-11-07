@@ -72,6 +72,9 @@ class Drupal8Plugin(p.SingletonPlugin):
         if not (domain and self.sysadmin_role and self.connection):
             raise Exception('Drupal8 extension has not been configured')
 
+        if len(domain.split(':')) > 2:
+            raise Exception('Unexpected domain format. We expect at most one colon (example.com or example.com:port)')
+
         self.domains = [item.strip() for item in domain.split(",")]
         self.domain = self.domains[0]
 
