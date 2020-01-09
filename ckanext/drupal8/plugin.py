@@ -157,7 +157,7 @@ class Drupal8Plugin(p.SingletonPlugin):
                 user['id'] = user_data.name
                 user['fullname'] = user_data.name
                 user = p.toolkit.get_action('user_update')(
-                    {'ignore_auth': True}, user)
+                    {'user': user['id'], 'ignore_auth': True}, user)
         else:
             user = {'email': user_data.mail,
                     'name': user_data.name,
