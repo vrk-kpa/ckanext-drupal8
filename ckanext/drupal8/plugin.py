@@ -9,6 +9,7 @@ import ckan.plugins as p
 import ckan.lib.base as base
 import ckan.logic as logic
 import ckan.lib.helpers as h
+from ckan.common import session
 
 log = logging.getLogger('ckanext.saml2')
 
@@ -132,6 +133,7 @@ class Drupal8Plugin(p.SingletonPlugin):
                     user = self.user(row)
                     break
             if user:
+                session.save()
                 break
 
         p.toolkit.c.user = user
