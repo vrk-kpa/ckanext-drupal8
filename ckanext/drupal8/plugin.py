@@ -144,7 +144,7 @@ class Drupal8Plugin(p.SingletonPlugin):
     def user(self, user_data):
         try:
             user = p.toolkit.get_action('user_show')(
-                {'keep_email': True}, {'id': user_data.name})
+                {'keep_email': True, 'ignore_auth': True}, {'id': user_data.name})
         except p.toolkit.ObjectNotFound:
             user = None
 
