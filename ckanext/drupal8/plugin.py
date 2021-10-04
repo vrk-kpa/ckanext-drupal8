@@ -1,4 +1,5 @@
 import logging
+import urllib
 import uuid
 import hashlib
 import base64
@@ -117,6 +118,8 @@ class Drupal8Plugin(p.SingletonPlugin):
         for drupal_session_name in self.drupal_session_names:
             drupal_sid = cookies.get(drupal_session_name)
             if drupal_sid:
+                # Drupal session ids now need to be unquoted
+                drupal_sid = urllib.unquote(drupal_sid)
                 hashed_sid = base64.urlsafe_b64encode(
                     hashlib.sha256(drupal_sid).digest()).replace("=", '')
 
