@@ -7,10 +7,10 @@ import base64
 import sqlalchemy as sa
 
 import ckan.plugins as p
-import ckan.lib.base as base
 import ckan.logic as logic
 import ckan.lib.helpers as h
 from ckan.common import session
+from ckanext.drupal8 import views
 
 log = logging.getLogger('ckanext.saml2')
 
@@ -47,11 +47,11 @@ def request_reset(context, data_dict):
 class Drupal8Plugin(p.SingletonPlugin):
 
     p.implements(p.IAuthenticator, inherit=True)
-    p.implements(p.IRoutes, inherit=True)
     p.implements(p.IAuthFunctions, inherit=True)
     p.implements(p.IConfigurer)
     p.implements(p.IConfigurable)
     p.implements(p.ITemplateHelpers)
+    p.implements(p.IBlueprint)
 
     drupal_session_names = None
 
@@ -80,19 +80,10 @@ class Drupal8Plugin(p.SingletonPlugin):
         self.domains = [item.strip() for item in domain.split(",")]
         self.domain = self.domains[0]
 
-    def before_map(self, map):
-        map.connect(
-            'drupal8_unauthorized',
-            '/drupal8_unauthorized',
-            controller='ckanext.drupal8.plugin:Drupal8Controller',
-            action='unauthorized'
-        )
-        return map
-
     def make_password(self):
         # create a hard to guess password
         out = ''
-        for n in xrange(8):
+        for n in range(8):
             out += str(uuid.uuid4())
         return out
 
@@ -195,12 +186,7 @@ class Drupal8Plugin(p.SingletonPlugin):
             auth_functions['user_update'] = user_update
         return auth_functions
 
+    # IBlueprint
 
-class Drupal8Controller(base.BaseController):
-
-    def unauthorized(self):
-        # This is our you are not authorized page
-        c = p.toolkit.c
-        c.code = 401
-        c.content = p.toolkit._('You are not authorized to do this')
-        return p.toolkit.render('error_document_template.html')
+    def get_blueprints(self):
+        return views.get_blueprints()
