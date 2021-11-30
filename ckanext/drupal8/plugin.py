@@ -7,10 +7,10 @@ import base64
 import sqlalchemy as sa
 
 import ckan.plugins as p
-import ckan.lib.base as base
 import ckan.logic as logic
 import ckan.lib.helpers as h
 from ckan.common import session
+from ckanext.drupal8 import views
 
 log = logging.getLogger('ckanext.saml2')
 
@@ -47,11 +47,11 @@ def request_reset(context, data_dict):
 class Drupal8Plugin(p.SingletonPlugin):
 
     p.implements(p.IAuthenticator, inherit=True)
-    p.implements(p.IRoutes, inherit=True)
     p.implements(p.IAuthFunctions, inherit=True)
     p.implements(p.IConfigurer)
     p.implements(p.IConfigurable)
     p.implements(p.ITemplateHelpers)
+    p.implements(p.IBlueprint)
 
     drupal_session_names = None
 
@@ -80,26 +80,18 @@ class Drupal8Plugin(p.SingletonPlugin):
         self.domains = [item.strip() for item in domain.split(",")]
         self.domain = self.domains[0]
 
-    def before_map(self, map):
-        map.connect(
-            'drupal8_unauthorized',
-            '/drupal8_unauthorized',
-            controller='ckanext.drupal8.plugin:Drupal8Controller',
-            action='unauthorized'
-        )
-        return map
-
     def make_password(self):
         # create a hard to guess password
         out = ''
-        for n in xrange(8):
+        for n in range(8):
             out += str(uuid.uuid4())
         return out
 
     def create_drupal_session_names(self):
         self.drupal_session_names = []
-        for domain in self.domains + [p.toolkit.request.environ['HTTP_HOST']]:
-            domain_hash = hashlib.sha256(domain).hexdigest()[:32]
+        domains = self.domains + [p.toolkit.request.environ['HTTP_HOST']]
+        for domain in domains:
+            domain_hash = hashlib.sha256(domain.encode('utf-8')).hexdigest()[:32]
             self.drupal_session_names.append('SESS%s' % domain_hash)
             self.drupal_session_names.append('SSESS%s' % domain_hash)  # https
 
@@ -109,7 +101,7 @@ class Drupal8Plugin(p.SingletonPlugin):
         convert this to represent the ckan user. '''
 
         # If no drupal sesssion name create one
-        if self.drupal_session_names is None:
+        if self.drupal_session_names in (None, []):
             self.create_drupal_session_names()
         # Can we find the user?
         cookies = p.toolkit.request.cookies
@@ -119,9 +111,10 @@ class Drupal8Plugin(p.SingletonPlugin):
             drupal_sid = cookies.get(drupal_session_name)
             if drupal_sid:
                 # Drupal session ids now need to be unquoted
-                drupal_sid = urllib.unquote(drupal_sid)
-                hashed_sid = base64.urlsafe_b64encode(
-                    hashlib.sha256(drupal_sid).digest()).replace("=", '')
+                drupal_sid = urllib.parse.unquote(drupal_sid)
+                sid_hash = hashlib.sha256(drupal_sid.encode('utf-8')).digest()
+                encoded_sid_hash = base64.urlsafe_b64encode(sid_hash).replace(b"=", b'')
+                encoded_sid_hash_str = encoded_sid_hash.decode('utf-8')
 
                 engine = sa.create_engine(self.connection)
                 rows = engine.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
@@ -130,11 +123,12 @@ class Drupal8Plugin(p.SingletonPlugin):
                                       '     WHERE r.roles_target_id=%s '
                                       ') AS t ON t.entity_id = u.uid '
                                       'WHERE s.sid=%s AND u.name != \'\'',
-                                      [self.sysadmin_role, str(hashed_sid)])
+                                      [self.sysadmin_role, encoded_sid_hash_str])
 
                 for row in rows:
                     user = self.user(row)
                     break
+
             if user:
                 session.save()
                 break
@@ -195,12 +189,7 @@ class Drupal8Plugin(p.SingletonPlugin):
             auth_functions['user_update'] = user_update
         return auth_functions
 
+    # IBlueprint
 
-class Drupal8Controller(base.BaseController):
-
-    def unauthorized(self):
-        # This is our you are not authorized page
-        c = p.toolkit.c
-        c.code = 401
-        c.content = p.toolkit._('You are not authorized to do this')
-        return p.toolkit.render('error_document_template.html')
+    def get_blueprints(self):
+        return views.get_blueprints()
