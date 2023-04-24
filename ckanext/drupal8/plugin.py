@@ -9,8 +9,11 @@ import sqlalchemy as sa
 import ckan.plugins as p
 import ckan.logic as logic
 import ckan.lib.helpers as h
-from ckan.common import session
+from ckan.common import g
 from ckanext.drupal8 import views
+from ckan import model
+from flask_login import login_user
+
 
 log = logging.getLogger('ckanext.saml2')
 
@@ -129,12 +132,11 @@ class Drupal8Plugin(p.SingletonPlugin):
                     user = self.user(row)
                     break
 
-            if user:
-                session.save()
-                break
-
-        p.toolkit.c.user = user
-
+        g.user = user
+        g.userobj = model.User.by_name(user)
+        if g.userobj:
+            login_user(g.userobj)
+        
     def _email_hash(self, email):
         return hashlib.md5(email.strip().lower().encode('utf8')).hexdigest()
 
@@ -191,5 +193,5 @@ class Drupal8Plugin(p.SingletonPlugin):
 
     # IBlueprint
 
-    def get_blueprints(self):
+    def get_blueprint(self):
         return views.get_blueprints()
