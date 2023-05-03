@@ -12,7 +12,7 @@ import ckan.lib.helpers as h
 from ckan.common import g
 from ckanext.drupal8 import views
 from ckan import model
-from flask_login import login_user
+from flask_login import login_user, logout_user
 
 
 log = logging.getLogger('ckanext.saml2')
@@ -136,6 +136,8 @@ class Drupal8Plugin(p.SingletonPlugin):
         g.userobj = model.User.by_name(user)
         if g.userobj:
             login_user(g.userobj)
+        else:
+            logout_user()
         
     def _email_hash(self, email):
         return hashlib.md5(email.strip().lower().encode('utf8')).hexdigest()
