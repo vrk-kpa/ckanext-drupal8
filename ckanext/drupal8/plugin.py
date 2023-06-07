@@ -74,11 +74,11 @@ class Drupal8Plugin(p.SingletonPlugin):
     def configure(self, config):
         domain = config.get('ckanext.drupal8.domain')
         self.sysadmin_role = config.get('ckanext.drupal8.sysadmin_role')
-        self.connection = config.get('ckanext.drupal8.connection')
+        drupal_database_address = config.get('ckanext.drupal8.connection')
         self.allow_edit = config.get(
             'ckanext.drupal8.allow_edit', 'false') == 'true'
 
-        if not (domain and self.sysadmin_role and self.connection):
+        if not (domain and self.sysadmin_role and drupal_database_address):
             raise Exception('Drupal8 extension has not been configured')
 
         if len(domain.split(':')) > 2:
@@ -86,6 +86,8 @@ class Drupal8Plugin(p.SingletonPlugin):
 
         self.domains = [item.strip() for item in domain.split(",")]
         self.domain = self.domains[0]
+
+        self.drupal_database_engine = sa.create_engine(drupal_database_address)
 
     def make_password(self):
         # create a hard to guess password
@@ -122,15 +124,14 @@ class Drupal8Plugin(p.SingletonPlugin):
                 sid_hash = hashlib.sha256(drupal_sid.encode('utf-8')).digest()
                 encoded_sid_hash = base64.urlsafe_b64encode(sid_hash).replace(b"=", b'')
                 encoded_sid_hash_str = encoded_sid_hash.decode('utf-8')
-
-                engine = sa.create_engine(self.connection)
-                rows = engine.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
-                                      'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
-                                      '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
-                                      '     WHERE r.roles_target_id=%s '
-                                      ') AS t ON t.entity_id = u.uid '
-                                      'WHERE s.sid=%s AND u.name != \'\'',
-                                      [self.sysadmin_role, encoded_sid_hash_str])
+                with self.drupal_database_engine.begin() as conn:
+                    rows = conn.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
+                                        'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
+                                        '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
+                                        '     WHERE r.roles_target_id=%s '
+                                        ') AS t ON t.entity_id = u.uid '
+                                        'WHERE s.sid=%s AND u.name != \'\'',
+                                        [self.sysadmin_role, encoded_sid_hash_str])
 
                 for row in rows:
                     user = self.user(row)
