@@ -1,0 +1,39 @@
+[project]
+name = "ckanext-drupal8"
+version = "0.0.1"
+description = "Drupal8 user integration with ckan"
+authors = [
+  {name = "Jari-Pekka Voutilainen", email = "jari-pekka.voutilainen@gofore.com"}
+]
+maintainers = []
+license = {text = "AGPL"}
+classifiers = [
+  "Intended Audience :: Developers",
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12"
+]
+keywords = [
+  "ckan",
+  "ckanext",
+  "drupal"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/vrk-kpa/ckanext-drupal8"
+Repository = "https://github.com/vrk-kpa/ckanext-drupal8"
+Issues = "https://github.com/vrk-kpa/ckanext-drupal8/issues"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.entry-points."ckan.plugins"]
+drupal8 = "ckanext.drupal8.plugin:Drupal8Plugin"
+
+[project.entry-points."babel.extractors"]
+ckan = "ckan.lib.extract:extract_ckan"
