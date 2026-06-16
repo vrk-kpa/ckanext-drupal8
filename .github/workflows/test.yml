@@ -52,7 +52,17 @@ jobs:
           
           ckan -c test.ini db init
       - name: Run tests
-        run: pytest --ckan-ini=test.ini --cov=ckanext.drupal8 --disable-warnings ckanext/drupal8
+        run: pytest --ckan-ini=test.ini --cov=ckanext.drupal8 --disable-warnings ckanext/drupal8/tests
+
+      - name: install codecov requirements
+        run: |
+          apt-get update
+          apt-get install -y curl gpg
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest
