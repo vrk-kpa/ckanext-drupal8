@@ -125,13 +125,15 @@ class Drupal8Plugin(p.SingletonPlugin):
                 encoded_sid_hash = base64.urlsafe_b64encode(sid_hash).replace(b"=", b'')
                 encoded_sid_hash_str = encoded_sid_hash.decode('utf-8')
                 with self.drupal_database_engine.begin() as conn:
-                    rows = conn.execute('SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
-                                        'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
-                                        '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
-                                        '     WHERE r.roles_target_id=%s '
-                                        ') AS t ON t.entity_id = u.uid '
-                                        'WHERE s.sid=%s AND u.name != \'\'',
-                                        [self.sysadmin_role, encoded_sid_hash_str])
+                    rows = conn.execute(sa.text(
+                        'SELECT u.name, u.mail, t.entity_id as uid FROM users_field_data u '
+                        'JOIN sessions s on s.uid=u.uid LEFT OUTER JOIN '
+                        '(SELECT r.roles_target_id as role_name, r.entity_id FROM user__roles r '
+                        '     WHERE r.roles_target_id=(:sysadmin_role) '
+                        ') AS t ON t.entity_id = u.uid '
+                        'WHERE s.sid=(:hash_string) AND u.name != \'\''),
+                        {"sysadmin_role": self.sysadmin_role, "hash_string":encoded_sid_hash_str}
+                    )
 
                 for row in rows:
                     user = self.user(row)
