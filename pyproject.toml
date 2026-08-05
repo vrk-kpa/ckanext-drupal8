@@ -37,3 +37,9 @@ drupal8 = "ckanext.drupal8.plugin:Drupal8Plugin"
 
 [project.entry-points."babel.extractors"]
 ckan = "ckan.lib.extract:extract_ckan"
+
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
