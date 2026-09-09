@@ -28,7 +28,8 @@ def user_create(context, data_dict):
 
 
 @logic.auth_sysadmins_check
-def user_update(context, data_dict):
+@p.toolkit.chained_auth_function
+def user_update(next_auth, context, data_dict):
     msg = p.toolkit._('Users cannot be edited.')
     return _no_permissions(context, msg)
 
