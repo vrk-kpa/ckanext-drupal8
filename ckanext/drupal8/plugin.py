@@ -45,7 +45,7 @@ def request_reset(context, data_dict):
     msg = p.toolkit._('Users cannot reset passwords.')
     return _no_permissions(context, msg)
 
-
+@p.toolkit.blanket.config_declarations
 class Drupal8Plugin(p.SingletonPlugin):
 
     p.implements(p.IAuthenticator, inherit=True)
@@ -70,8 +70,7 @@ class Drupal8Plugin(p.SingletonPlugin):
         domain = config.get('ckanext.drupal8.domain')
         self.sysadmin_role = config.get('ckanext.drupal8.sysadmin_role')
         drupal_database_address = config.get('ckanext.drupal8.connection')
-        self.allow_edit = config.get(
-            'ckanext.drupal8.allow_edit', 'false') == 'true'
+        self.allow_edit = config.get('ckanext.drupal8.allow_edit')
 
         if not (domain and self.sysadmin_role and drupal_database_address):
             raise Exception('Drupal8 extension has not been configured')
