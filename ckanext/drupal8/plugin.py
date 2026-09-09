@@ -13,7 +13,7 @@ from ckanext.drupal8 import views
 from ckan import model
 
 
-log = logging.getLogger('ckanext.saml2')
+log = logging.getLogger(__name__)
 
 
 def _no_permissions(context, msg):
