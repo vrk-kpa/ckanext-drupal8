@@ -1,0 +1,33 @@
+version: 1
+groups:
+  - annotation: Drupal settings
+    options:
+      - key: ckanext.drupal8.site_url
+        description: |
+          Domain for drupal site, including protocol
+        default: http://localhost
+        example: http://localhost
+
+      - key: ckanext.drupal8.domain
+        description: |
+          Domain in which drupal generates cookies
+        default: localhost
+        example: localhost
+
+      - key: ckanext.drupal8.sysadmin_role
+        description: |
+          Name of the role in drupal, which is used to give
+          sysadmin access in ckan
+        default: ckan_admin
+        example: ckan_admin
+
+      - key: ckanext.drupal8.connection
+        description: |
+          SQL connection string to drupal database
+        example: postgresql://drupal:pass@drupal/drupal
+
+      - key: ckanext.drupal8.allow_edit
+        description: |
+          Boolean for allowing users to edit their ckan profiles
+        default: false
+        type: bool
